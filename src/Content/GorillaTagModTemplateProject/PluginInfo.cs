@@ -1,12 +1,10 @@
-﻿namespace GorillaTagModTemplateProject
+namespace WinlatorXR_XRapiBridge
 {
-	/// <summary>
-	/// This class is used to provide information about your mod to BepInEx.
-	/// </summary>
-	class PluginInfo
-	{
-		public const string GUID = "com.AuthorLowerName.gorillatag.GorillaTagLowerModTemplateProject";
-		public const string Name = "GorillaTagModTemplateProject";
-		public const string Version = "1.0.0";
-	}
+    public static class PluginInfo
+    {
+        public const string GUID = "com.yourname.winlatorxr.xrapi";
+        public const string NAME = "WinlatorXR XRapi Bridge";
+        public const string VERSION = "0.1.0";
+        public const string AUTHOR = "YourName";
+    }
 }
