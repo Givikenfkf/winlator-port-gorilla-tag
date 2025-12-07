@@ -5,6 +5,7 @@ namespace WinlatorXR_XRapiBridge
         public const string GUID = "com.yourname.winlatorxr.xrapi";
         public const string NAME = "WinlatorXR XRapi Bridge";
         public const string VERSION = "0.1.0";
-        public const string AUTHOR = "YourName";
+        public const string AUTHOR = "slowfox45";
     }
 }
+
