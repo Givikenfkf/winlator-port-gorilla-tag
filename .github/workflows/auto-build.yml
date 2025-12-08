@@ -1,4 +1,4 @@
-name: Build GorillaTagModTemplateProject (with robust NuGet restore)
+name: Build (download Harmony nupkg, extract DLL, build)
 
 on:
   push:
@@ -9,24 +9,39 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Ensure nuget.org source is present
+      - name: Prepare lib folder
         run: |
-          echo "Listing current nuget sources..."
-          dotnet nuget list source
-          echo "Adding nuget.org source (if not present)..."
-          dotnet nuget add source "https://api.nuget.org/v3/index.json" -n nuget.org || echo "nuget.org add attempted"
-          dotnet nuget list source
+          if(!(Test-Path lib)) { New-Item -ItemType Directory -Path lib } else { Write-Host "lib exists" }
+        shell: powershell
 
-      - name: Restore (explicit)
+      - name: Download HarmonyLib nupkg from NuGet
         run: |
-          echo "Restoring packages for the project..."
-          dotnet restore src/Content/GorillaTagModTemplateProject/GorillaTagModTemplateProject.csproj --disable-parallel --verbosity minimal
+          Write-Host "Downloading HarmonyLib nupkg..."
+          Invoke-WebRequest -Uri "https://www.nuget.org/api/v2/package/HarmonyLib/2.2.2" -OutFile harmony.nupkg
+          Write-Host "Downloaded harmony.nupkg, extracting..."
+          Expand-Archive -LiteralPath harmony.nupkg -DestinationPath harmony_pkg -Force
+          # prefer net472 then netstandard2.0 then search
+          if (Test-Path "harmony_pkg/lib/net472/HarmonyLib.dll") {
+            Copy-Item -Path "harmony_pkg/lib/net472/HarmonyLib.dll" -Destination "lib/HarmonyLib.dll" -Force
+          } elseif (Test-Path "harmony_pkg/lib/netstandard2.0/HarmonyLib.dll") {
+            Copy-Item -Path "harmony_pkg/lib/netstandard2.0/HarmonyLib.dll" -Destination "lib/HarmonyLib.dll" -Force
+          } else {
+            $dll = Get-ChildItem -Path harmony_pkg -Recurse -Filter "HarmonyLib.dll" | Select-Object -First 1
+            if ($dll) { Copy-Item -Path $dll.FullName -Destination "lib/HarmonyLib.dll" -Force }
+            else { Write-Error "HarmonyLib.dll not found in package"; exit 1 }
+          }
+          Write-Host "lib contents:"
+          Get-ChildItem -Path lib
+
+      - name: (Optional) copy game / BepInEx DLLs
+        run: |
+          echo "If you need to provide UnityEngine.dll/Assembly-CSharp.dll/BepInEx.dll from secrets or release, do that here."
         shell: bash
 
-      - name: Build
+      - name: Build project
         run: |
           dotnet build src/Content/GorillaTagModTemplateProject/GorillaTagModTemplateProject.csproj -c Release -o artifacts
         shell: bash
