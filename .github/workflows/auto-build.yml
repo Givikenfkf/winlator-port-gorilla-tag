@@ -1,37 +1,35 @@
-name: Auto Build DLL
+name: Build GorillaTagModTemplateProject (with robust NuGet restore)
+
 on:
-  workflow_dispatch:
   push:
-    branches: [master,main,ci]
-    paths-ignore:
-      - '**.yml'
-      - '!.github/workflows/auto-build.yml'
-      - '**.md'
-      - '.gitignore'
-  pull_request:
-    branches: [master,main]
+    branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
   build:
-    name: Build DLL
     runs-on: windows-latest
     steps:
-    # Checkout sources
-    - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    # Setup dotnet environment
-    - name: Setup dotnet
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: '7.0.x'
+      - name: Ensure nuget.org source is present
+        run: |
+          echo "Listing current nuget sources..."
+          dotnet nuget list source
+          echo "Adding nuget.org source (if not present)..."
+          dotnet nuget add source "https://api.nuget.org/v3/index.json" -n nuget.org || echo "nuget.org add attempted"
+          dotnet nuget list source
 
-    # Build the DLL
-    - name: Build project
-      run: dotnet build src/Content/GorillaTagModTemplateProject/GorillaTagModTemplateProject.csproj -c Release
+      - name: Restore (explicit)
+        run: |
+          echo "Restoring packages for the project..."
+          dotnet restore src/Content/GorillaTagModTemplateProject/GorillaTagModTemplateProject.csproj --disable-parallel --verbosity minimal
+        shell: bash
 
-    # Upload the DLL
-    - name: Upload DLL Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: GorillaTagModTemplateProject-DLL
-        path: src/Content/GorillaTagModTemplateProject/bin/Release/netstandard2.0/GorillaTagModTemplateProject.dll
+      - name: Build
+        run: |
+          dotnet build src/Content/GorillaTagModTemplateProject/GorillaTagModTemplateProject.csproj -c Release -o artifacts
+        shell: bash
+
+      - name: List artifacts
+        run: dir artifacts
