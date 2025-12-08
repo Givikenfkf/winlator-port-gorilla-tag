@@ -14,8 +14,9 @@
 
   <!-- Pull Harmony from NuGet so HarmonyLib namespace resolves -->
   <ItemGroup>
-    <PackageReference Include="HarmonyLib" Version="2.2.2" />
-  </ItemGroup>
+  <!-- Use HarmonyLib from nuget.org (explicit version) -->
+  <PackageReference Include="HarmonyLib" Version="2.2.2" />
+</ItemGroup>
 
   <ItemGroup>
     <!-- NOTE: HintPath uses the properties above. Make sure to place the game's DLLs (UnityEngine.dll, Assembly-CSharp.dll, etc.)
@@ -394,3 +395,4 @@
     </Reference>
   </ItemGroup>
 </Project>
+
